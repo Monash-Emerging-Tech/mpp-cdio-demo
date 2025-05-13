@@ -1,0 +1,116 @@
+digraph finite_state_machine {
+	node [shape = doublecircle] 0;
+	node [shape = circle, fontsize=12];
+	
+    0 [label= "Open {V18} and {V19} to fill {B01} with water" ]
+    1 [label= "Open {V18} and {V19} to fill {B01} with water" ]
+    2 [label= "Open {V18} and {V19} to fill {B01} with water" ]
+    0 -> 1 [label= "V18 = 1" ]
+    1 -> 0 [label= "V18 = 0" ]
+    0 -> 2 [label= "V19 = 1" ]
+    2 -> 0 [label= "V19 = 0" ]
+    1 -> 3 [label= "V19 = 1" ]
+    2 -> 3 [label= "V18 = 1" ]
+    
+    3 [label= "Wait for {B01} to fill up to 80L" ]
+    3 -> 1 [label= "V19 = 0" ]
+    3 -> 2 [label= "V18 = 0" ]
+    3 -> 4 [label= "B01 > 80" ]
+    
+    4 [label= "Close {V18} or {V19}" ]
+    4 -> 5 [label= "V18 = 0" ]
+    4 -> 6 [label= "V19 = 0" ]
+    5 -> 7 [label= "V19 = 0" ]
+    6 -> 7 [label= "V18 = 0" ]
+    
+     5 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+     6 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+     7 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+     8 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+     9 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    10 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    11 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    12 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    13 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    14 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    15 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    16 [label= "Set {FCV01} and {PCV02} to 50% OP" ]
+    // V19 open
+     5 ->  8 [label= "FCV01 = 0.5" ]
+     5 ->  9 [label= "PCV02 = 0.5" ]
+     8 ->  5 [label= "FCV01 ! 0.5" ]
+     9 ->  5 [label= "PCV02 ! 0.5" ]
+     8 -> 14 [label= "PCV02 = 0.5" ]
+     9 -> 14 [label= "FCV01 = 0.5" ]
+     8 -> 12 [label= "V19 = 0" ]
+     9 -> 13 [label= "V19 = 0" ]
+    14 -> 16 [label= "V19 = 0" ]
+    // V18 open
+     6 -> 10 [label= "FCV01 = 0.5" ]
+     6 -> 11 [label= "PCV02 = 0.5" ]
+    10 ->  6 [label= "FCV01 ! 0.5" ]
+    11 ->  6 [label= "PCV02 ! 0.5" ]
+    10 -> 15 [label= "PCV02 = 0.5" ]
+    11 -> 15 [label= "FCV01 = 0.5" ]
+    10 -> 12 [label= "V18 = 0" ]
+    11 -> 13 [label= "V18 = 0" ]
+    15 -> 16 [label= "V18 = 0" ]
+    // Neither V18 or V19 open
+     7 -> 12 [label= "FCV01 = 0.5" ]
+     7 -> 13 [label= "PCV02 = 0.5" ]
+    12 ->  7 [label= "FCV01 ! 0.5" ]
+    13 ->  7 [label= "PCV02 ! 0.5" ]
+    12 -> 16 [label= "PCV02 = 0.5" ]
+    13 -> 16 [label= "FCV01 = 0.5" ]
+    12 ->  8 [label= "V19 = 1" ]
+    13 ->  9 [label= "V19 = 1" ]
+    16 -> 14 [label= "V19 = 1" ]
+    12 -> 10 [label= "V18 = 1" ]
+    13 -> 11 [label= "V18 = 1" ]
+    16 -> 15 [label= "V18 = 1" ]
+    
+    14 [label= "Start {P01}" ]
+    15 [label= "Start {P01}" ]
+    16 [label= "Start {P01}" ]
+    14 -> 17 [label= "P01 = 1" ]
+    15 -> 18 [label= "P01 = 1" ]
+    16 -> 19 [label= "P01 = 1" ]
+    14 -> 20 [label= "VP03 = 1" ]
+    15 -> 21 [label= "VP03 = 1" ]
+    16 -> 22 [label= "VP03 = 1" ]
+    14 ->  8 [label= "PCV02 ! 0.5" ]
+    14 ->  9 [label= "FCV01 ! 0.5" ]
+    15 -> 10 [label= "PCV02 ! 0.5" ]
+    15 -> 11 [label= "FCV01 ! 0.5" ]
+    16 -> 12 [label= "PCV02 ! 0.5" ]
+    16 -> 13 [label= "FCV01 ! 0.5" ]
+    
+    20 [label= "Close {VP03}; starting {-P01} now could damage {-UF01} and {-UF02}" ]
+    21 [label= "Close {VP03}; starting {-P01} now could damage {-UF01} and {-UF02}" ]
+    22 [label= "Close {VP03}; starting {-P01} now could damage {-UF01} and {-UF02}" ]
+    20 -> 14 [label= "VP03 = 0" ]
+    21 -> 15 [label= "VP03 = 0" ]
+    22 -> 16 [label= "VP03 = 0" ]
+    
+    17 [label= "Open {VP03}" ]
+    18 [label= "Open {VP03}" ]
+    19 [label= "Open {VP03}" ]
+    17 -> 23 [label= "VP03 = 1" ]
+    18 -> 24 [label= "VP03 = 1" ]
+    19 -> 25 [label= "VP03 = 1" ]
+    17 -> 14 [label= "P01 = 0" ]
+    18 -> 15 [label= "P01 = 0" ]
+    19 -> 16 [label= "P01 = 0" ]
+
+    
+    23 [label= "End of procedure for now" ]
+    24 [label= "End of procedure for now" ]
+    25 [label= "End of procedure for now" ]
+    
+    23 -> 1 [label= "ALM_LSL01 = 1" ] // V18 open
+    24 -> 2 [label= "ALM_LSL01 = 1" ] // V19 open
+    25 -> 0 [label= "ALM_LSL01 = 1" ]
+    
+    
+    // @Incomplete: Alarms
+}
