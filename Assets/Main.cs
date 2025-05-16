@@ -708,6 +708,9 @@ public class CSVReader : MonoBehaviour {
             int num_hrows = 3;
             part_definitions = new MSPP_Part[num_rows-num_hrows];
             part_objects = new GameObject[num_rows-num_hrows];
+
+            GameObject pos = GameObject.Find("Position");
+
             for (int i = num_hrows; i < num_rows; i++) {
                 MSPP_Part part = new MSPP_Part();
                 part.name = data[num_cols*i + 0];
@@ -729,10 +732,14 @@ public class CSVReader : MonoBehaviour {
                 }
                 GameObject gobj = (GameObject)Instantiate(
                     prefab,
-                    new Vector3(-part.x/10, part.z/10, -part.y/10),
+                    new Vector3(-part.x/1000, part.z/1000, -part.y/1000), // VR: position units scaled down from /10
                     Quaternion.identity
                 );
                 gobj.transform.eulerAngles = new Vector3(part.rx, part.rz, part.ry);
+
+                // VR Compatibility: Add scale and position offset
+                gobj.transform.parent = pos.transform;
+
                 gobj.name = part.name;
                 MeshCollider collider = gobj.AddComponent<MeshCollider>();
                 collider.sharedMesh = gobj.GetComponentInChildren<MeshFilter>().sharedMesh;
@@ -799,6 +806,11 @@ public class CSVReader : MonoBehaviour {
                     effect.enabled = false;
                 }
             }
+
+            GameObject frame = GameObject.Find("Frame");
+
+            pos.transform.position = frame.transform.position;
+
         }
 
         // Setting up part states
