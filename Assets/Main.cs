@@ -15,6 +15,8 @@ using System.Text;
 using System.IO;
 
 using cakeslice;
+using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class CSVReader : MonoBehaviour {
     public TextAsset ValveMetadata;
@@ -167,6 +169,10 @@ public class CSVReader : MonoBehaviour {
     public float camera_height;
     public bool  camera_free_not_constrained;
     private EventSystem event_system;
+
+    // XR Action controllers
+    public ActionBasedController leftController;
+    public ActionBasedController rightController;
 
     System.Random rnd = new System.Random();
 
@@ -1226,13 +1232,22 @@ public class CSVReader : MonoBehaviour {
         seconds_elapsed += dt;
         sim.steps_elapsed = Math.Min((int)(seconds_elapsed/sim.step_length), sim.steps_max);
 
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) {
+        // Get current controller
+        ActionBasedController currentController = null;
+
+        if (leftController.activateAction.action.WasPressedThisFrame() ) currentController = leftController;
+        else if (rightController.activateAction.action.WasPressedThisFrame()) currentController = rightController;
+        else currentController = null;
+        
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || leftController.selectAction.action.WasPressedThisFrame()) {
             // Toggle highlights on parts named in instructions
-            if (Input.GetKeyDown(KeyCode.H)) {
+            if (Input.GetKeyDown(KeyCode.H) || leftController.selectAction.action.WasPressedThisFrame()) {
+                Debug.Log("Grip pressed");
                 highlight_instruction_parts = !highlight_instruction_parts;
             }
 
             // Undo and redo
+            // TODO: Convert to XR controller input
             if (Input.GetKeyDown(KeyCode.Z)) {
                 UndoEvent(ref sim, ref event_queue, ref event_queue_index);
             }
@@ -1394,7 +1409,7 @@ public class CSVReader : MonoBehaviour {
             }
 
             // Clicking
-            if (Input.GetMouseButtonDown(0)) {
+            if (Input.GetMouseButtonDown(0) || currentController) {
                 if (selected_part != null) {
                     foreach (MSPP_Part part in part_definitions) {
                         if (part.name == selected_part.name) {
@@ -1411,7 +1426,12 @@ public class CSVReader : MonoBehaviour {
 
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                //XR controller ray 
+                // TODO: Add POKE interaction
+                XRRayInteractor xRRayInteractor = currentController.GetComponentInChildren<XRRayInteractor>();
                 if (Physics.Raycast(ray, out hit)) selected_part = hit.collider.gameObject;
+                else if (xRRayInteractor.TryGetCurrent3DRaycastHit(out hit)) selected_part = hit.collider.gameObject;
                 else                               selected_part = null;
                 Debug.Log(selected_part);
 
@@ -1516,6 +1536,7 @@ public class CSVReader : MonoBehaviour {
                                 }
                                 else if (part.category == "Component_Interactive") {
                                     // Currently just pumps
+                                    // TODO: Simulate pump interaction
                                     bool prev_value = pumps[selected_part.name];
                                     bool new_value = !prev_value;
                                     set_pump(selected_part.name, new_value);
@@ -1538,7 +1559,7 @@ public class CSVReader : MonoBehaviour {
                     }
                 }
             }
-            if (Input.GetMouseButtonUp(0)) {
+            if (Input.GetMouseButtonUp(0) || (currentController && currentController.activateAction.action.WasReleasedThisFrame())) {
                 if (selected_prop_valve != null) {
                     Debug.Log(String.Format("Released {0}", selected_prop_valve_name));
                     selected_prop_valve = null;
