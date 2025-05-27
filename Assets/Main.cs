@@ -1235,19 +1235,35 @@ public class CSVReader : MonoBehaviour {
         // Get current controller
         ActionBasedController currentController = null;
 
-        if (leftController.activateAction.action.WasPressedThisFrame() ) currentController = leftController;
+        if (leftController.activateAction.action.WasPressedThisFrame()) currentController = leftController;
         else if (rightController.activateAction.action.WasPressedThisFrame()) currentController = rightController;
         else currentController = null;
+
+        // XR Shortcuts
+
+        // left grip - toggle highlights
+        if (leftController.selectAction.action.WasPressedThisFrame()) highlight_instruction_parts = !highlight_instruction_parts;
         
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl) || leftController.selectAction.action.WasPressedThisFrame()) {
+        if (Input.GetKeyDown(KeyCode.JoystickButton0))
+        {
+            // Undo
+            UndoEvent(ref sim, ref event_queue, ref event_queue_index);
+        }
+        if (Input.GetKeyDown(KeyCode.JoystickButton1))
+        {
+            // Redo
+            RedoEvent(ref sim, ref event_queue, ref event_queue_index);
+        }
+
+
+        // Keyboard shortcuts
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) {
             // Toggle highlights on parts named in instructions
-            if (Input.GetKeyDown(KeyCode.H) || leftController.selectAction.action.WasPressedThisFrame()) {
-                Debug.Log("Grip pressed");
+            if (Input.GetKeyDown(KeyCode.H)) {
                 highlight_instruction_parts = !highlight_instruction_parts;
             }
 
             // Undo and redo
-            // TODO: Convert to XR controller input
             if (Input.GetKeyDown(KeyCode.Z)) {
                 UndoEvent(ref sim, ref event_queue, ref event_queue_index);
             }
