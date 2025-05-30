@@ -662,7 +662,8 @@ public class CSVReader : MonoBehaviour {
         pvv_mesh.SetTriangles(tri_list, 0, 3, 0);
         pvv_mesh.SetTriangles(tri_list, 3, 3, 1);
 
-        event_system = GetComponentInChildren<EventSystem>();
+        // Allow outside event system
+        event_system = GameObject.Find("EventSystem").GetComponent<EventSystem>();
 
 
 #if TEST_PLOT
@@ -745,9 +746,15 @@ public class CSVReader : MonoBehaviour {
 
                 // VR Compatibility: Add scale and position offset
                 gobj.transform.parent = pos.transform;
-
+                // Add XR Interactable component for interaction
+                gobj.AddComponent<XRSimpleInteractable>(); 
                 gobj.name = part.name;
+
+                // Add collider to XR Interactable
                 MeshCollider collider = gobj.AddComponent<MeshCollider>();
+                var interactable = gobj.GetComponent<XRSimpleInteractable>();
+                interactable.colliders.Add(collider);
+
                 collider.sharedMesh = gobj.GetComponentInChildren<MeshFilter>().sharedMesh;
                 part_objects[i-num_hrows] = gobj;
 
@@ -1448,8 +1455,13 @@ public class CSVReader : MonoBehaviour {
                 XRRayInteractor xRRayInteractor = currentController.GetComponentInChildren<XRRayInteractor>();
                 if (Physics.Raycast(ray, out hit)) selected_part = hit.collider.gameObject;
                 else if (xRRayInteractor.TryGetCurrent3DRaycastHit(out hit)) selected_part = hit.collider.gameObject;
-                else                               selected_part = null;
-                Debug.Log(selected_part);
+                else selected_part = null;
+
+                // Debug
+                if (selected_part != null)
+                {
+                    Debug.Log(String.Format("Selected part: {0}", selected_part.name));
+                }
 
                 if (selected_part != null) {
                     bool selected_part_is_editable = true;
