@@ -299,7 +299,9 @@ public class CSVReader : MonoBehaviour {
             } 
         }
         if (value_edited != null && value_display != null) {
-            float value = float.Parse(value_edited.text);
+            string cleaned = value_edited.text.Trim() + "\n"; // avoid formatting exception
+            Debug.Log("cleaned input value: " + cleaned);
+            float value = float.Parse(cleaned);
             value = Mathf.Clamp(value, 0, 100) / 100f;
             value_display.text = value.ToString("P");
             MPP_PCV_State valve_state = proportional_control_valves[gobj.name];
