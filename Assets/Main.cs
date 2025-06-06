@@ -767,7 +767,8 @@ public class CSVReader : MonoBehaviour {
                         canvas.blocksRaycasts = false;
                         canvas.alpha = 0f;
                         canvas.gameObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                        var button_sp = gobj.GetComponentInChildren<UnityEngine.UI.Button>();
+                        var button_sp = gobj.transform.Find("Button_SP_Confirm").GetComponent<Button>();
+                            //GetComponentInChildren<UnityEngine.UI.Button>();
 
                         int idx = -1;
                         if (part.name == "FCV01") {
