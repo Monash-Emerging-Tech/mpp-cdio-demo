@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class KeyPadInputHandler : MonoBehaviour
 {
-    public TextMeshProUGUI outputText;
+    public TMP_InputField inputText; // Reference to the TextMeshPro Input Field
     // Start is called before the first frame update
     void Start()
     {
@@ -19,7 +19,7 @@ public class KeyPadInputHandler : MonoBehaviour
 
     void AppendNumberToOutput(string number)
     {
-        outputText.text += number;
+        inputText.text += number;
     }
     
     // Update is called once per frame
