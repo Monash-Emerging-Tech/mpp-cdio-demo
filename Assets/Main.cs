@@ -750,12 +750,14 @@ public class CSVReader : MonoBehaviour {
                 gobj.AddComponent<XRSimpleInteractable>(); 
                 gobj.name = part.name;
 
-                // Add collider to XR Interactable
                 MeshCollider collider = gobj.AddComponent<MeshCollider>();
-                var interactable = gobj.GetComponent<XRSimpleInteractable>();
-                interactable.colliders.Add(collider);
-
                 collider.sharedMesh = gobj.GetComponentInChildren<MeshFilter>().sharedMesh;
+                collider.convex = true;
+
+                // Use XRGrabInteractable for snapping/grabbing
+                var simpleInteractable = gobj.GetComponent<XRSimpleInteractable>();
+                simpleInteractable.colliders.Clear();
+                simpleInteractable.colliders.Add(collider);
                 part_objects[i-num_hrows] = gobj;
 
                 if (part.category == "Valve_Interactive") {

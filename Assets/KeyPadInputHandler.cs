@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,10 +11,12 @@ public class KeyPadInputHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        foreach (Button button in GetComponentsInChildren<Button>())
+        foreach (Transform child in gameObject.transform)
         {
-            button.onClick.AddListener(
-                () => AppendNumberToOutput(button.GetComponentInChildren<Text>().ToString()));
+            Button button = child.gameObject.GetComponent<Button>();
+            // Cache the button's text value to avoid closure issues
+            string buttonText = child.name;
+            button.onClick.AddListener(() => AppendNumberToOutput(buttonText));
         }
     }
 
@@ -21,10 +24,10 @@ public class KeyPadInputHandler : MonoBehaviour
     {
         inputText.text += number;
     }
-    
+
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }
