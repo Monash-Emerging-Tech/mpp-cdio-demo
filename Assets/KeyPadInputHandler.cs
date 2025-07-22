@@ -1,30 +1,33 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class KeyPadInputHandler : MonoBehaviour
 {
-    public TextMeshProUGUI outputText;
+    public TMP_InputField inputText; // Reference to the TextMeshPro Input Field
     // Start is called before the first frame update
     void Start()
     {
-        foreach (Button button in GetComponentsInChildren<Button>())
+        foreach (Transform child in gameObject.transform)
         {
-            button.onClick.AddListener(
-                () => AppendNumberToOutput(button.GetComponentInChildren<Text>().ToString()));
+            Button button = child.gameObject.GetComponent<Button>();
+            // Cache the button's text value to avoid closure issues
+            string buttonText = child.name;
+            button.onClick.AddListener(() => AppendNumberToOutput(buttonText));
         }
     }
 
     void AppendNumberToOutput(string number)
     {
-        outputText.text += number;
+        inputText.text += number;
     }
-    
+
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

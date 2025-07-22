@@ -753,12 +753,14 @@ public class CSVReader : MonoBehaviour {
                 gobj.AddComponent<XRSimpleInteractable>(); 
                 gobj.name = part.name;
 
-                // Add collider to XR Interactable
                 MeshCollider collider = gobj.AddComponent<MeshCollider>();
-                var interactable = gobj.GetComponent<XRSimpleInteractable>();
-                interactable.colliders.Add(collider);
-
                 collider.sharedMesh = gobj.GetComponentInChildren<MeshFilter>().sharedMesh;
+                collider.convex = true;
+
+                // Use XRGrabInteractable for snapping/grabbing
+                var simpleInteractable = gobj.GetComponent<XRSimpleInteractable>();
+                simpleInteractable.colliders.Clear();
+                simpleInteractable.colliders.Add(collider);
                 part_objects[i-num_hrows] = gobj;
 
                 if (part.category == "Valve_Interactive") {
@@ -770,7 +772,7 @@ public class CSVReader : MonoBehaviour {
                         canvas.blocksRaycasts = false;
                         canvas.alpha = 0f;
                         canvas.gameObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                        var button_sp = gobj.transform.Find("Button_SP_Confirm").GetComponent<Button>();
+                        var button_sp = GameObject.Find("Button_SP_Confirm").GetComponent<Button>();
                             //GetComponentInChildren<UnityEngine.UI.Button>();
 
                         int idx = -1;
