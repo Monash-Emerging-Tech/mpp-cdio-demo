@@ -305,10 +305,7 @@ public class CSVReader : MonoBehaviour {
             value = Mathf.Clamp(value, 0, 100) / 100f;
             value_display.text = value.ToString("P");
             MPP_PCV_State valve_state = proportional_control_valves[gobj.name];
-            
-            // close UI menu
-            gobj.transform.Find("Interface_ValveControl").gameObject.SetActive(false);
-            
+
             // Adding interaction to event queue
             MPP_Event ev = new MPP_Event();
             ev.type       = MPP_Event_Type.proportional_control_valve_interaction;
