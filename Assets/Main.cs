@@ -24,8 +24,7 @@ public class CSVReader : MonoBehaviour {
     public TextAsset PumpSourcesTxtFile;
     public TextAsset ProcedureFSM;
     public GameObject[] prefabs;
-    private bool FCV01ListenerAssigned = false;
-    private bool PCV02ListenerAssigned = false;
+
     private Dictionary<string,int> prefab_dict = new Dictionary<string,int>();
 
     List<string[]> import_pathways(TextAsset txt_file) {
@@ -777,19 +776,14 @@ public class CSVReader : MonoBehaviour {
                             //GetComponentInChildren<UnityEngine.UI.Button>();
 
                         int idx = -1;
-                        
-                        
-                        if (part.name == "FCV01" && !FCV01ListenerAssigned) {
+                        if (part.name == "FCV01") {
                             button_sp.onClick.AddListener(delegate{OnOperatingPointChange(gobj, FIC01_OP_manu_index);});
                             idx = FIC01_OP_manu_index;
-                            FCV01ListenerAssigned = true;
                         }
-                        if (part.name == "PCV02" && !PCV02ListenerAssigned) {
+                        if (part.name == "PCV02") {
                             button_sp.onClick.AddListener(delegate{OnOperatingPointChange(gobj, PIC02_OP_manu_index);});
                             idx = PIC02_OP_manu_index;
-                            PCV02ListenerAssigned = true;
                         }
-                        
                         TMPro.TMP_Text value_display = null;
                         foreach (TMPro.TMP_Text text in gobj.GetComponentsInChildren<TMPro.TMP_Text>()) {
                             if (text.name == "Value_SP") {
