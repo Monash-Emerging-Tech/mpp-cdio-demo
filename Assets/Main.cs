@@ -14,7 +14,6 @@ using UnityEngine.UI;
 using System.Text;
 using System.IO;
 
-using cakeslice;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -826,7 +825,9 @@ public class CSVReader : MonoBehaviour {
                 }
                 // Add OutlineEffect (has to be run after any additional children are added to the part)
                 foreach (MeshRenderer mesh_renderer in gobj.GetComponentsInChildren<MeshRenderer>()) {
-                    OutlineEffect effect = mesh_renderer.gameObject.AddComponent<OutlineEffect>();
+                    Outline effect = mesh_renderer.gameObject.AddComponent<Outline>();
+                    effect.OutlineColor = Color.cyan;
+                    effect.OutlineWidth = 5f;
                     effect.enabled = false;
                 }
             }
@@ -1368,12 +1369,12 @@ public class CSVReader : MonoBehaviour {
             instruction_text.GetComponent<TMPro.TMP_Text>().text = instruction.text;
             // Clear currently highlighted parts
             foreach (GameObject p in highlighted_parts) {
-                foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
+                foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
                     effect.enabled = false;
                 }
             }
             foreach (GameObject p in highlighted_parts_red) {
-                foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
+                foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
                     effect.enabled = false;
                 }
             }
@@ -1392,14 +1393,14 @@ public class CSVReader : MonoBehaviour {
         }
         // Highlight parts referenced in instruction
         foreach (GameObject p in highlighted_parts) {
-            foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
-                effect.color = 0;
+            foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
+                //effect.color = 0;
                 effect.enabled = highlight_instruction_parts;
             }
         }
         foreach (GameObject p in highlighted_parts_red) {
-            foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
-                effect.color = 1;
+            foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
+                //effect.color = 1;
                 effect.enabled = highlight_instruction_parts;
             }
         }
