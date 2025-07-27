@@ -16,6 +16,7 @@ using System.IO;
 
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
+using Unity.XR.CoreUtils;
 
 public class CSVReader : MonoBehaviour {
     public TextAsset ValveMetadata;
@@ -771,8 +772,8 @@ public class CSVReader : MonoBehaviour {
                         canvas.blocksRaycasts = false;
                         canvas.alpha = 0f;
                         canvas.gameObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                        var button_sp = GameObject.Find("Button_SP_Confirm").GetComponent<Button>();
-                            //GetComponentInChildren<UnityEngine.UI.Button>();
+                        var button_sp = gobj.GetNamedChild("Button_SP_Confirm").GetComponent<Button>();
+                        //GetComponentInChildren<UnityEngine.UI.Button>();
 
                         int idx = -1;
                         
