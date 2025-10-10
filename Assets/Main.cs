@@ -14,7 +14,9 @@ using UnityEngine.UI;
 using System.Text;
 using System.IO;
 
-using cakeslice;
+using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
+using Unity.XR.CoreUtils;
 
 public class CSVReader : MonoBehaviour {
     public TextAsset ValveMetadata;
@@ -22,7 +24,8 @@ public class CSVReader : MonoBehaviour {
     public TextAsset PumpSourcesTxtFile;
     public TextAsset ProcedureFSM;
     public GameObject[] prefabs;
-
+    private bool FCV01ListenerAssigned = false;
+    private bool PCV02ListenerAssigned = false;
     private Dictionary<string,int> prefab_dict = new Dictionary<string,int>();
 
     List<string[]> import_pathways(TextAsset txt_file) {
@@ -168,6 +171,10 @@ public class CSVReader : MonoBehaviour {
     public bool  camera_free_not_constrained;
     private EventSystem event_system;
 
+    // XR Action controllers
+    public ActionBasedController leftController;
+    public ActionBasedController rightController;
+
     System.Random rnd = new System.Random();
 
     string[][] linked_parts = {
@@ -292,7 +299,9 @@ public class CSVReader : MonoBehaviour {
             } 
         }
         if (value_edited != null && value_display != null) {
-            float value = float.Parse(value_edited.text);
+            string cleaned = value_edited.text.Trim() + "\n"; // avoid formatting exception
+            Debug.Log("cleaned input value: " + cleaned);
+            float value = float.Parse(cleaned);
             value = Mathf.Clamp(value, 0, 100) / 100f;
             value_display.text = value.ToString("P");
             MPP_PCV_State valve_state = proportional_control_valves[gobj.name];
@@ -656,7 +665,8 @@ public class CSVReader : MonoBehaviour {
         pvv_mesh.SetTriangles(tri_list, 0, 3, 0);
         pvv_mesh.SetTriangles(tri_list, 3, 3, 1);
 
-        event_system = GetComponentInChildren<EventSystem>();
+        // Allow outside event system
+        event_system = GameObject.Find("EventSystem").GetComponent<EventSystem>();
 
 
 #if TEST_PLOT
@@ -708,6 +718,9 @@ public class CSVReader : MonoBehaviour {
             int num_hrows = 3;
             part_definitions = new MSPP_Part[num_rows-num_hrows];
             part_objects = new GameObject[num_rows-num_hrows];
+
+            GameObject pos = GameObject.Find("Position");
+
             for (int i = num_hrows; i < num_rows; i++) {
                 MSPP_Part part = new MSPP_Part();
                 part.name = data[num_cols*i + 0];
@@ -729,13 +742,25 @@ public class CSVReader : MonoBehaviour {
                 }
                 GameObject gobj = (GameObject)Instantiate(
                     prefab,
-                    new Vector3(-part.x/10, part.z/10, -part.y/10),
+                    new Vector3(-part.x/1000, part.z/1000, -part.y/1000), // VR: position units scaled down from /10
                     Quaternion.identity
                 );
                 gobj.transform.eulerAngles = new Vector3(part.rx, part.rz, part.ry);
+
+                // VR Compatibility: Add scale and position offset
+                gobj.transform.parent = pos.transform;
+                // Add XR Interactable component for interaction
+                gobj.AddComponent<XRSimpleInteractable>(); 
                 gobj.name = part.name;
+
                 MeshCollider collider = gobj.AddComponent<MeshCollider>();
                 collider.sharedMesh = gobj.GetComponentInChildren<MeshFilter>().sharedMesh;
+                collider.convex = true;
+
+                // Use XRGrabInteractable for snapping/grabbing
+                var simpleInteractable = gobj.GetComponent<XRSimpleInteractable>();
+                simpleInteractable.colliders.Clear();
+                simpleInteractable.colliders.Add(collider);
                 part_objects[i-num_hrows] = gobj;
 
                 if (part.category == "Valve_Interactive") {
@@ -747,17 +772,23 @@ public class CSVReader : MonoBehaviour {
                         canvas.blocksRaycasts = false;
                         canvas.alpha = 0f;
                         canvas.gameObject.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                        var button_sp = gobj.GetComponentInChildren<UnityEngine.UI.Button>();
+                        var button_sp = gobj.GetNamedChild("Button_SP_Confirm").GetComponent<Button>();
+                        //GetComponentInChildren<UnityEngine.UI.Button>();
 
                         int idx = -1;
-                        if (part.name == "FCV01") {
+                        
+                        
+                        if (part.name == "FCV01" && !FCV01ListenerAssigned) {
                             button_sp.onClick.AddListener(delegate{OnOperatingPointChange(gobj, FIC01_OP_manu_index);});
                             idx = FIC01_OP_manu_index;
+                            FCV01ListenerAssigned = true;
                         }
-                        if (part.name == "PCV02") {
+                        if (part.name == "PCV02" && !PCV02ListenerAssigned) {
                             button_sp.onClick.AddListener(delegate{OnOperatingPointChange(gobj, PIC02_OP_manu_index);});
                             idx = PIC02_OP_manu_index;
+                            PCV02ListenerAssigned = true;
                         }
+                        
                         TMPro.TMP_Text value_display = null;
                         foreach (TMPro.TMP_Text text in gobj.GetComponentsInChildren<TMPro.TMP_Text>()) {
                             if (text.name == "Value_SP") {
@@ -795,10 +826,17 @@ public class CSVReader : MonoBehaviour {
                 }
                 // Add OutlineEffect (has to be run after any additional children are added to the part)
                 foreach (MeshRenderer mesh_renderer in gobj.GetComponentsInChildren<MeshRenderer>()) {
-                    OutlineEffect effect = mesh_renderer.gameObject.AddComponent<OutlineEffect>();
+                    Outline effect = mesh_renderer.gameObject.AddComponent<Outline>();
+                    effect.OutlineColor = Color.cyan;
+                    effect.OutlineWidth = 5f;
                     effect.enabled = false;
                 }
             }
+
+            GameObject frame = GameObject.Find("Frame");
+
+            pos.transform.position = frame.transform.position;
+
         }
 
         // Setting up part states
@@ -1214,6 +1252,31 @@ public class CSVReader : MonoBehaviour {
         seconds_elapsed += dt;
         sim.steps_elapsed = Math.Min((int)(seconds_elapsed/sim.step_length), sim.steps_max);
 
+        // Get current controller
+        ActionBasedController currentController = null;
+
+        if (leftController.activateAction.action.WasPressedThisFrame()) currentController = leftController;
+        else if (rightController.activateAction.action.WasPressedThisFrame()) currentController = rightController;
+        else currentController = null;
+
+        // XR Shortcuts
+
+        // left grip - toggle highlights
+        if (leftController.selectAction.action.WasPressedThisFrame()) highlight_instruction_parts = !highlight_instruction_parts;
+        
+        if (Input.GetKeyDown(KeyCode.JoystickButton0))
+        {
+            // Undo
+            UndoEvent(ref sim, ref event_queue, ref event_queue_index);
+        }
+        if (Input.GetKeyDown(KeyCode.JoystickButton1))
+        {
+            // Redo
+            RedoEvent(ref sim, ref event_queue, ref event_queue_index);
+        }
+
+
+        // Keyboard shortcuts
         if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) {
             // Toggle highlights on parts named in instructions
             if (Input.GetKeyDown(KeyCode.H)) {
@@ -1307,12 +1370,12 @@ public class CSVReader : MonoBehaviour {
             instruction_text.GetComponent<TMPro.TMP_Text>().text = instruction.text;
             // Clear currently highlighted parts
             foreach (GameObject p in highlighted_parts) {
-                foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
+                foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
                     effect.enabled = false;
                 }
             }
             foreach (GameObject p in highlighted_parts_red) {
-                foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
+                foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
                     effect.enabled = false;
                 }
             }
@@ -1331,14 +1394,14 @@ public class CSVReader : MonoBehaviour {
         }
         // Highlight parts referenced in instruction
         foreach (GameObject p in highlighted_parts) {
-            foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
-                effect.color = 0;
+            foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
+                //effect.color = 0;
                 effect.enabled = highlight_instruction_parts;
             }
         }
         foreach (GameObject p in highlighted_parts_red) {
-            foreach (OutlineEffect effect in p.GetComponentsInChildren<OutlineEffect>()) {
-                effect.color = 1;
+            foreach (Outline effect in p.GetComponentsInChildren<Outline>()) {
+                //effect.color = 1;
                 effect.enabled = highlight_instruction_parts;
             }
         }
@@ -1382,7 +1445,7 @@ public class CSVReader : MonoBehaviour {
             }
 
             // Clicking
-            if (Input.GetMouseButtonDown(0)) {
+            if (Input.GetMouseButtonDown(0) || currentController) {
                 if (selected_part != null) {
                     foreach (MSPP_Part part in part_definitions) {
                         if (part.name == selected_part.name) {
@@ -1399,9 +1462,19 @@ public class CSVReader : MonoBehaviour {
 
                 RaycastHit hit;
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                //XR controller ray 
+                // TODO: Add POKE interaction
+                XRRayInteractor xRRayInteractor = currentController.GetComponentInChildren<XRRayInteractor>();
                 if (Physics.Raycast(ray, out hit)) selected_part = hit.collider.gameObject;
-                else                               selected_part = null;
-                Debug.Log(selected_part);
+                else if (xRRayInteractor.TryGetCurrent3DRaycastHit(out hit)) selected_part = hit.collider.gameObject;
+                else selected_part = null;
+
+                // Debug
+                if (selected_part != null)
+                {
+                    Debug.Log(String.Format("Selected part: {0}", selected_part.name));
+                }
 
                 if (selected_part != null) {
                     bool selected_part_is_editable = true;
@@ -1504,6 +1577,7 @@ public class CSVReader : MonoBehaviour {
                                 }
                                 else if (part.category == "Component_Interactive") {
                                     // Currently just pumps
+                                    // TODO: Simulate pump interaction
                                     bool prev_value = pumps[selected_part.name];
                                     bool new_value = !prev_value;
                                     set_pump(selected_part.name, new_value);
@@ -1526,7 +1600,7 @@ public class CSVReader : MonoBehaviour {
                     }
                 }
             }
-            if (Input.GetMouseButtonUp(0)) {
+            if (Input.GetMouseButtonUp(0) || (currentController && currentController.activateAction.action.WasReleasedThisFrame())) {
                 if (selected_prop_valve != null) {
                     Debug.Log(String.Format("Released {0}", selected_prop_valve_name));
                     selected_prop_valve = null;

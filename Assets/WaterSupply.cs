@@ -12,6 +12,7 @@ public class WaterSupply : MonoBehaviour
     MeshRenderer spline_mesh_renderer;
 
     public void SetColour() {
+        
         if (activated) {
             mesh_renderer.material.color        = activated_colour;
             spline_mesh_renderer.material.color = activated_colour;
